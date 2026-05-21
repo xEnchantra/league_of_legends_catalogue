@@ -68,7 +68,7 @@ class _CharacterListScreenState extends State<CharacterListScreen> {
       appBar: AppBar(
         toolbarHeight: 100,
         title: Padding(padding: const EdgeInsets.only(top: 27),
-            child: Text("League of Legends Characters",
+            child: Text("League of Legends Champions",
             style: GoogleFonts.cormorant(fontSize: 40, fontWeight: FontWeight.w700, letterSpacing: 1)
             ),
         ),
@@ -87,28 +87,44 @@ class _CharacterListScreenState extends State<CharacterListScreen> {
       return Center(child: Text(errorMessage));
     }
 
-    return ListView.builder(
+    return GridView.builder(
         padding: const EdgeInsets.all(24),
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 350,
+          childAspectRatio: 0.6,
+          crossAxisSpacing: 20,
+          mainAxisSpacing: 20,
+        ),
+
         itemCount: characters.length,
         itemBuilder: (context, index) {
           final character = characters[index];
-          final imageAdress = 'https://ddragon.leagueoflegends.com/cdn/16.10.1/img/champion/${character['id']}.png';
+          final imageAdress = 'https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${character['id']}_0.jpg';
+          // path to icons
+          // 'https://ddragon.leagueoflegends.com/cdn/16.10.1/img/champion/${character['id']}.png'
+          // path to loading screen icons
+          // 'https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${character['name']}_0.jpg'
 
           return Card(
-            child: Row(
-              children: [
-                Image.network(imageAdress, width: 100, height: 100),
-                const SizedBox(width: 16),
-                Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(character['name'], style: GoogleFonts.cormorant(fontSize: 32, fontWeight: FontWeight.w600)),
-                        Text(character['title'], style: GoogleFonts.cormorant(fontSize: 20, fontWeight: FontWeight.w500)),
-                      ],
-                    )
-                )
-              ],
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Image.network(imageAdress),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    character['name'],
+                    style: GoogleFonts.cormorant(
+                        fontSize: 32, fontWeight: FontWeight.w600),
+                    textAlign: TextAlign.center,
+                    maxLines: 1, overflow:
+                  TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
           );
         },
