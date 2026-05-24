@@ -10,6 +10,10 @@ It allows users to browse a list of all champions and check their abilities and 
 * **API Integration:** The app communicates with the official Riot Games REST API (Data Dragon), making separate requests for the list and details.
 * **Offline Mode:** Thanks to local storage, part of the main character list is saved and displays correctly even without an internet connection.
 * **Error Handling & Loading State:** The app shows loading animations and text messages when there is no network connection.
+* **Filtering:** Displays list of champions whose name starts with particular letter.
+* **Language Switch:** A built-in button that toggles the entire app between Polish and English.
+* **Manual Refresh:** Supports the "pull-to-refresh" gesture, allowing users to manually and quickly fetch the latest data from the servers.
+
 
 ## Technologies Used
 * Flutter & Dart
