@@ -169,6 +169,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
   String lore = '';
   bool loading = true;
   String error = '';
+  List<dynamic> spells = [];
+  String currentSpellDescription = 'Choose spell to see description';
 
   @override
   void initState() {
@@ -183,6 +185,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
       if (answer2.statusCode == 200) {
         final data = jsonDecode(answer2.body);
         setState(() {
+          spells = data['data'][widget.CharacterID]['spells'];
           lore = data['data'][widget.CharacterID]['lore'];
           loading = false;
         });
@@ -199,29 +202,104 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final SplashArtAdress = 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${widget.CharacterID}_0.jpg';
-
     return Scaffold(
       appBar: AppBar(title: Text(widget.CharacterName,
           style: GoogleFonts.cormorant(
-          fontSize: 32, fontWeight: FontWeight.w600),
+              fontSize: 32, fontWeight: FontWeight.w600),
           maxLines: 1,
-          overflow: TextOverflow.ellipsis)),
-      body: loading ? const Center(child: CircularProgressIndicator())
-          : error.isNotEmpty
-          ? Center(child: Text(error))
-          : SingleChildScrollView(
-        child: Column(
-          children: [
-            Image.network(SplashArtAdress),
-            Padding(
-              padding: const EdgeInsets.all(30),
-              child: Text(lore, style: GoogleFonts.cormorant(
-                  fontSize: 24, fontWeight: FontWeight.w600)),
-            ),
-          ],
-        ),
+          overflow: TextOverflow.ellipsis)
       ),
+      body: _buildDetailsBody(),
     );
   }
-}
+
+  Widget _buildDetailsBody() {
+    if (loading) return const Center(child: CircularProgressIndicator());
+
+    final SplashArtAdress = 'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${widget
+        .CharacterID}_0.jpg';
+
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 2,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 24),
+                  child: Image.network(SplashArtAdress, fit: BoxFit.cover),
+                ),
+              ),
+              Expanded(
+                flex: 1,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: error.isNotEmpty
+                  ? Center(
+                    child: Text(
+                      "No internet connection, can't get spells",
+                      style: GoogleFonts.cormorant(fontSize: 24, fontWeight: FontWeight.w600),
+                      textAlign: TextAlign.center,
+                    ),
+                  )
+                  : Column(
+                    children: [
+                      Wrap(
+                        spacing: 20,
+                        runSpacing: 20,
+                        alignment: WrapAlignment.center,
+                        children: spells.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final spell = entry.value;
+                          final spellImage = 'https://ddragon.leagueoflegends.com/cdn/16.10.1/img/spell/${spell['image']['full']}';
+
+                          final keys = ['Q', 'W', 'E', 'R'];
+
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                currentSpellDescription = spell['description'].replaceAll(RegExp(r'<[^>]*>'), '');
+                              });
+                            },
+                            child: Column(
+                              children: [
+                                Image.network(spellImage, width: 70, height: 70),
+                                const SizedBox(height: 4),
+                                Text(
+                                  index < 4 ? keys[index] : '',
+                                  style: GoogleFonts.cormorant(fontSize: 18, fontWeight: FontWeight.w700),
+                                )
+                              ],
+                            )
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        currentSpellDescription,
+                        style: GoogleFonts.cormorant(fontSize: 20, fontWeight: FontWeight.w600),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              ],
+              ),
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  error.isNotEmpty ? "No internet connection, can't get lore"
+                  : lore,
+                  style: GoogleFonts.cormorant(fontSize: 20,
+                    fontWeight: FontWeight.w500),
+                    textAlign: TextAlign.justify,
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+    }
