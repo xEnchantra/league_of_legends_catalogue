@@ -1,17 +1,24 @@
-# lol_catalogue
+# League of Legends Champions Catalogue
 
-A new Flutter project.
+## Project description
+A mobile application created in Flutter that serves as an interactive catalogue of League of Legends characters.
+It allows users to browse a list of all champions and check their abilities and lore.
 
-## Getting Started
+## Main Features
+* **Character List:** Displays a grid with portraits and basic information about the champions.
+* **Details Screen:** A dedicated screen for each character, showing their splash art, spells, and lore.
+* **API Integration:** The app communicates with the official Riot Games REST API (Data Dragon), making separate requests for the list and details.
+* **Offline Mode:** Thanks to local storage, part of the main character list is saved and displays correctly even without an internet connection.
+* **Error Handling & Loading State:** The app shows loading animations and text messages when there is no network connection.
 
-This project is a starting point for a Flutter application.
+## Technologies Used
+* Flutter & Dart
+* `http` package for handling REST API requests
+* `shared_preferences` package for offline mode support
+* `google_fonts` package for fonts
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## How to Run the Project
+1. Download the repository to your local machine.
+2. Open the project in a code editor, e.g., Android Studio.
+3. Fetch the necessary packages using the terminal command: `flutter pub get`.
+4. Run the app on an emulator or a physical device using the command: `flutter run`.
