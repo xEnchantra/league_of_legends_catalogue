@@ -29,9 +29,14 @@ class CharacterListScreen extends StatefulWidget {
 }
 
 class _CharacterListScreenState extends State<CharacterListScreen> {
-  List<dynamic> characters = [];
+  List<dynamic> allCharacters = [];
+  List<dynamic> displayedCharacters = [];
   bool isLoading = true;
   String errorMessage = '';
+  String languageCode = 'en_US';
+
+  String selectedLetter = 'All';
+  final List<String> alphabet = ['All', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
 
   @override
   void initState() {
@@ -39,22 +44,41 @@ class _CharacterListScreenState extends State<CharacterListScreen> {
     getCharacters();
   }
 
+  void filterCharacters(String letter) {
+    setState(() {
+      selectedLetter = letter;
+      if (letter == 'All') {
+        displayedCharacters = allCharacters;
+      } else {
+        displayedCharacters = allCharacters.where((char) => char['name'].toString().startsWith(letter)).toList();
+      }
+    });
+  }
+
   Future<void> getCharacters() async {
     final memory = await SharedPreferences.getInstance();
 
+    setState(() {
+      isLoading = true;
+    });
+
     try {
-      final answer = await http.get(Uri.parse('https://ddragon.leagueoflegends.com/cdn/16.10.1/data/en_US/champion.json'));
+      final answer = await http.get(Uri.parse('https://ddragon.leagueoflegends.com/cdn/16.10.1/data/$languageCode/champion.json'));
 
       if (answer.statusCode == 200) {
         await memory.setString("saved_list", answer.body);
 
         final data = jsonDecode(answer.body);
         setState(() {
-          characters = data['data'].values.toList();
+          allCharacters = data['data'].values.toList();
+          filterCharacters(selectedLetter);
           isLoading = false;
         });
       } else {
-          errorMessage = "Server error";
+        setState(() {
+          errorMessage = languageCode == 'en_US' ? "Server error" : "Błąd serwera";
+          isLoading = false;
+        });
       }
     } catch (e) {
         final savedData = memory.getString('saved_list');
@@ -62,9 +86,10 @@ class _CharacterListScreenState extends State<CharacterListScreen> {
         setState(() {
           if (savedData != null) {
             final data = jsonDecode(savedData);
-            characters = data['data'].values.toList();
+            allCharacters = data['data'].values.toList();
+            filterCharacters(selectedLetter);
           } else {
-            errorMessage = "No internet connection and no saved data";
+            errorMessage = languageCode == 'en_US' ? "No internet connection and no saved data" : "Brak połączenia z internetem i zapisanych danych";
           }
           isLoading = false;
         });
@@ -76,19 +101,35 @@ class _CharacterListScreenState extends State<CharacterListScreen> {
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 100,
-        title: Padding(padding: const EdgeInsets.only(top: 27),
+        title: Padding(padding: const EdgeInsets.only(top: 16),
             child: Text("League of Legends Champions",
             style: GoogleFonts.cormorant(fontSize: 40, fontWeight: FontWeight.w700, letterSpacing: 1)
             ),
         ),
-          centerTitle: true,
+        centerTitle: true,
+
+        actions: [
+          TextButton(
+              onPressed: () {
+                setState(() {
+                  languageCode = languageCode == 'en_US' ? 'pl_PL' : 'en_US';
+                });
+                getCharacters();
+              },
+          child: Text(
+            languageCode == 'en_US' ? 'EN' : 'PL',
+            style: GoogleFonts.cormorant(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.red[900]),
+          ),
+          ),
+          const SizedBox(width: 16),
+        ],
       ),
       body: _buildScreenBody(),
     );
   }
 
   Widget _buildScreenBody() {
-    if (isLoading) {
+    if (isLoading && allCharacters.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
@@ -96,7 +137,34 @@ class _CharacterListScreenState extends State<CharacterListScreen> {
       return Center(child: Text(errorMessage));
     }
 
-    return GridView.builder(
+    return Column(
+      children: [
+        SizedBox(
+          height: 60,
+          child: Center(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: alphabet.map((letter) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 0.76, vertical: 8),
+                    child: ActionChip(
+                      label: Text(letter, style: GoogleFonts.cormorant(fontSize: 16, fontWeight: FontWeight.bold)),
+                      backgroundColor: selectedLetter == letter ? Colors.red[900] : Colors.grey[900],
+                      onPressed: () => filterCharacters(letter),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+        ),
+
+    Expanded(
+    child: RefreshIndicator(
+      onRefresh: getCharacters,
+      child: GridView.builder(
         padding: const EdgeInsets.all(24),
         gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
           maxCrossAxisExtent: 350,
@@ -104,25 +172,25 @@ class _CharacterListScreenState extends State<CharacterListScreen> {
           crossAxisSpacing: 20,
           mainAxisSpacing: 20,
         ),
-
-        itemCount: characters.length,
+        itemCount: displayedCharacters.length,
         itemBuilder: (context, index) {
-          final character = characters[index];
+          final character = displayedCharacters[index];
           final imageAdress = 'https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${character['id']}_0.jpg';
-          // path to icons
-          // 'https://ddragon.leagueoflegends.com/cdn/16.10.1/img/champion/${character['id']}.png'
-          // path to loading screen icons
-          // 'https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${character['name']}_0.jpg'
+        // path to icons
+        // 'https://ddragon.leagueoflegends.com/cdn/16.10.1/img/champion/${character['id']}.png'
+        // path to loading screen icons
+        // 'https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${character['name']}_0.jpg'
 
           return GestureDetector(
             onTap: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => DetailsScreen(
-                      CharacterID: character['id'],
-                      CharacterName: character['name'],
-                    ),
+                  builder: (context) => DetailsScreen(
+                    CharacterID: character['id'],
+                    CharacterName: character['name'],
+                    LanguageCode: languageCode,
+                  ),
                 ),
               );
             },
@@ -139,7 +207,7 @@ class _CharacterListScreenState extends State<CharacterListScreen> {
                       Text(
                         character['name'],
                         style: GoogleFonts.cormorant(
-                            fontSize: 32, fontWeight: FontWeight.w600),
+                          fontSize: 32, fontWeight: FontWeight.w600),
                         textAlign: TextAlign.center,
                         maxLines: 1, overflow:
                       TextOverflow.ellipsis,
@@ -150,6 +218,10 @@ class _CharacterListScreenState extends State<CharacterListScreen> {
               ),
           );
         },
+      ),
+    ),
+    ),
+    ],
     );
   }
 }
@@ -158,8 +230,9 @@ class _CharacterListScreenState extends State<CharacterListScreen> {
 class DetailsScreen extends StatefulWidget {
   final String CharacterID;
   final String CharacterName;
+  final String LanguageCode;
 
-  const DetailsScreen({super.key, required this.CharacterID, required this.CharacterName});
+  const DetailsScreen({super.key, required this.CharacterID, required this.CharacterName, required this.LanguageCode});
 
   @override
   State<DetailsScreen> createState() => _DetailsScreenState();
@@ -170,17 +243,22 @@ class _DetailsScreenState extends State<DetailsScreen> {
   bool loading = true;
   String error = '';
   List<dynamic> spells = [];
-  String currentSpellDescription = 'Choose spell to see description';
+  String currentAbilityDescription = '';
 
   @override
   void initState() {
     super.initState();
+
+    currentAbilityDescription = widget.LanguageCode == 'en_US'
+        ? 'Choose ability to see description'
+        : 'Wybierz umiejetność, żeby zobaczyć opis';
+
     getDetailedData();
   }
 
   Future<void> getDetailedData() async {
     try {
-      final answer2 = await http.get(Uri.parse('https://ddragon.leagueoflegends.com/cdn/16.10.1/data/en_US/champion/${widget.CharacterID}.json'));
+      final answer2 = await http.get(Uri.parse('https://ddragon.leagueoflegends.com/cdn/16.10.1/data/${widget.LanguageCode}/champion/${widget.CharacterID}.json'));
 
       if (answer2.statusCode == 200) {
         final data = jsonDecode(answer2.body);
@@ -239,7 +317,9 @@ class _DetailsScreenState extends State<DetailsScreen> {
                   child: error.isNotEmpty
                   ? Center(
                     child: Text(
-                      "No internet connection, can't get spells",
+                      widget.LanguageCode == 'en_US'
+                       ? "No internet connection, can't get abilities"
+                       : "Brak internetu, nie można pobrać umiejętności",
                       style: GoogleFonts.cormorant(fontSize: 24, fontWeight: FontWeight.w600),
                       textAlign: TextAlign.center,
                     ),
@@ -260,7 +340,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                           return GestureDetector(
                             onTap: () {
                               setState(() {
-                                currentSpellDescription = spell['description'].replaceAll(RegExp(r'<[^>]*>'), '');
+                                currentAbilityDescription = spell['description'].replaceAll(RegExp(r'<[^>]*>'), '');
                               });
                             },
                             child: Column(
@@ -278,7 +358,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        currentSpellDescription,
+                        currentAbilityDescription,
                         style: GoogleFonts.cormorant(fontSize: 20, fontWeight: FontWeight.w600),
                         textAlign: TextAlign.center,
                       ),
@@ -291,8 +371,11 @@ class _DetailsScreenState extends State<DetailsScreen> {
               Padding(
                 padding: const EdgeInsets.all(24),
                 child: Text(
-                  error.isNotEmpty ? "No internet connection, can't get lore"
-                  : lore,
+                  error.isNotEmpty
+                      ? (widget.LanguageCode == 'en_US'
+                        ? "No internet connection, can't get lore"
+                        : "Brak internetu, nie można pobrać historii")
+                      : lore,
                   style: GoogleFonts.cormorant(fontSize: 20,
                     fontWeight: FontWeight.w500),
                     textAlign: TextAlign.justify,
