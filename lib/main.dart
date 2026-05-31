@@ -35,8 +35,8 @@ class _CharacterListScreenState extends State<CharacterListScreen> {
   String errorMessage = '';
   String languageCode = 'en_US';
 
-  String selectedLetter = 'All';
-  final List<String> alphabet = ['All', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+  String selectedLetter = 'ALL';
+  final List<String> alphabet = ['ALL', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
 
   @override
   void initState() {
@@ -47,7 +47,7 @@ class _CharacterListScreenState extends State<CharacterListScreen> {
   void filterCharacters(String letter) {
     setState(() {
       selectedLetter = letter;
-      if (letter == 'All') {
+      if (letter == 'ALL') {
         displayedCharacters = allCharacters;
       } else {
         displayedCharacters = allCharacters.where((char) => char['name'].toString().startsWith(letter)).toList();
@@ -102,7 +102,7 @@ class _CharacterListScreenState extends State<CharacterListScreen> {
       appBar: AppBar(
         toolbarHeight: 100,
         title: Padding(padding: const EdgeInsets.only(top: 16),
-            child: Text("League of Legends Champions",
+            child: Text(languageCode == 'en_US' ? "League of Legends Champions" : 'Bohaterowie League of Legends',
             style: GoogleFonts.cormorant(fontSize: 40, fontWeight: FontWeight.w700, letterSpacing: 1)
             ),
         ),
@@ -147,10 +147,15 @@ class _CharacterListScreenState extends State<CharacterListScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: alphabet.map((letter) {
+                  String buttonText = letter;
+                  if (letter == 'ALL') {
+                    buttonText = languageCode == 'pl_PL' ? 'Wszystkie' : 'All';
+                  }
+
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 0.76, vertical: 8),
                     child: ActionChip(
-                      label: Text(letter, style: GoogleFonts.cormorant(fontSize: 16, fontWeight: FontWeight.bold)),
+                      label: Text(buttonText, style: GoogleFonts.cormorant(fontSize: 16, fontWeight: FontWeight.bold)),
                       backgroundColor: selectedLetter == letter ? Colors.red[900] : Colors.grey[900],
                       onPressed: () => filterCharacters(letter),
                     ),
